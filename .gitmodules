@@ -1,0 +1,3 @@
+[submodule "OrderService"]
+	path = OrderService
+	url = git@github.com:soroushfathi/Microservice_Order.git
