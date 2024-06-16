@@ -11,7 +11,7 @@ services:
       - POSTGRES_USER=puser
       - POSTGRES_PASSWORD=ppasssword
     volumes:
-      - product_db_data:/var/lib/postgersql/data/
+      - product_db_data:/var/lib/postgresql/data/
 
   product_redis:
     image: redis:7
