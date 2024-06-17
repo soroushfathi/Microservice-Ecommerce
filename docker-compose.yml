@@ -4,14 +4,30 @@ services:
   product_db:
     image: postgres:14.1
     container_name: product_db
-    ports:
-      - 5432:5432
+    #ports:
+    #  - 5432:5432
     environment:
       - POSTGRES_DB=productservice
       - POSTGRES_USER=puser
       - POSTGRES_PASSWORD=ppasssword
     volumes:
       - product_db_data:/var/lib/postgresql/data/
+    networks:
+      - app-network
+  
+  order_db:
+    image: postgres:14.1
+    container_name: order_db
+    #ports:
+    #  - 5434:5432
+    environment:
+      - POSTGRES_DB=orderservice
+      - POSTGRES_USER=puser
+      - POSTGRES_PASSWORD=ppassword
+    volumes:
+      - order_db_data:/var/lib/postgresql/data/
+    networks:
+      - app-network
 
   product_redis:
     image: redis:7
@@ -20,18 +36,22 @@ services:
       - 6379:6379
     volumes:
       - product_redis_data:/data
- 
-  django_product:
+    networks:
+      - app-network
+
+  django-product:
     build:
       context: ./ProductService/
       dockerfile: docker/production.Dockerfile
-    container_name: django_product
+    container_name: django-product
     command: ProductService/docker/web_entrypoint.sh
     environment:
       - DATABASE_URL=psql://puser:ppasssword@product_db:5432/productservice
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     volumes:
       - .:/app
+    dns:
+      - 10.202.10.202
     ports:
       - "8000:8000"
     depends_on:
@@ -39,6 +59,29 @@ services:
       - product_redis
       - rabbitmq
     restart: on-failure
+    networks:
+      - app-network
+  
+  django-order:
+    build:
+      context: ./OrderService/
+      dockerfile: docker/production.Dockerfile
+    container_name: django-order
+    command: OrderService/docker/web_entrypoint.sh
+    environment:
+      - DATABASE_URL=psql://puser:ppassword@order_db:5432/orderservice
+      - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
+    volumes:
+      - .:/app
+    dns:
+      - 10.202.10.202
+    ports:
+      - "8002:8002"
+    depends_on:
+      - order_db
+      - rabbitmq
+    networks:
+      - app-network
 
   rabbitmq:
     image: "rabbitmq:alpine"
@@ -48,7 +91,15 @@ services:
       interval: 30s
       timeout: 30s
       retries: 3
+    networks:
+      - app-network
 
 volumes:
     product_db_data:
     product_redis_data:
+    order_db_data:
+
+networks:
+  app-network:
+    driver: bridge
+
