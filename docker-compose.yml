@@ -44,12 +44,12 @@ services:
       context: ./ProductService/
       dockerfile: docker/production.Dockerfile
     container_name: django-product
-    command: ProductService/docker/web_entrypoint.sh
+    command: docker/web_entrypoint.sh
     environment:
       - DATABASE_URL=psql://puser:ppasssword@product_db:5432/productservice
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     volumes:
-      - .:/app
+      - ./ProductService/:/app
     dns:
       - 10.202.10.202
     ports:
@@ -67,12 +67,12 @@ services:
       context: ./OrderService/
       dockerfile: docker/production.Dockerfile
     container_name: django-order
-    command: OrderService/docker/web_entrypoint.sh
+    command: docker/web_entrypoint.sh
     environment:
       - DATABASE_URL=psql://puser:ppassword@order_db:5432/orderservice
       - CELERY_BROKER_URL=amqp://guest:guest@rabbitmq:5672//
     volumes:
-      - .:/app
+      - ./OrderService/:/app
     dns:
       - 10.202.10.202
     ports:
